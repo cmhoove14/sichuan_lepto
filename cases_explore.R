@@ -1,4 +1,7 @@
+library(lubridate)
+
 #Lepto case data with land cover, population, and SAGA TWI extracted to case locations
+
 require(lubridate)
 require(raster)
 lep<-read.csv('C:/Users/chris_hoover/Documents/RemaisWork/SurfaceH2O/China/Data/Lepto/cases_twi_pop_globcov.csv')
@@ -48,3 +51,4 @@ boxplot(twidf$SAGA_TWI1, lep$SAGA_TWI, na.rm = TRUE,
     median(twidf$SAGA_TWI1, na.rm=TRUE)
     quantile(twidf$SAGA_TWI1, na.rm=TRUE)
     
+
