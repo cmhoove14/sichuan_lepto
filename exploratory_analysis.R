@@ -448,12 +448,36 @@ plot(twn_centroids,pch=20,add=T)
 
 #' Check for eg region 1 if it looks like they overlap the data
 
+#' Color points by number of values at each location
+#' 
+#' 
+
+# unique_loc contains the list of unique locations
+# lengths_perLoc contains number of points at each location
+
+# transform unique_loc to spatial points dataframe (easier for plotting)
+unique_loc <- as.data.frame(unique_loc)
+coordinates(unique_loc) <- c('POINT_X','POINT_Y')
+unique_loc$lengthsPerLoc <- lengths_perLoc
+
+# define colors corresponding to number of points per location
+# change the colorbar not to confuse with years of incidence
+pal <- rev(heat.colors(max(unique_loc$lengthsPerLoc)))
+# plot(1:length(pal),pch=19,col=pal)
+intcols_lengthPerLoc <- pal[unique_loc$lengthsPerLoc]
+
+layout(matrix(c(1,2),nrow=1), widths=c(4,1))
 plot(sichuan,col='grey',axes=T,
      xlim=c(6.2e5,6.8e5),ylim=c(3.45e6,3.5e6))
 plot(townships,add=T)
-plot(lep, col = intcols, pch = 19,add=T,cex=0.5)
+plot(unique_loc, col = intcols_lengthPerLoc, pch = 19,add=T,cex=0.5)
 plot(twn_centroids,pch=3,add=T)
+color.bar(pal,
+          min=min(unique_loc$lengthsPerLoc),
+          max=max(unique_loc$lengthsPerLoc),
+          title = '# incidence')
 
+#' It looks like locations where incidence is reported usually are unique within a township, and that does not depend on the number of incidence points found at that location.
 
 #' 
 #' ## Check wrt to locations with high number of incidence reported ##
@@ -493,17 +517,20 @@ points(loc_lengthest,pch=3,col=colorRampPalette(c("red", "white"))( 10 ) ,cex=2)
 
 # 
 library(rgeos)
-townships_buffer <- gBuffer( twn_centroids, width=500, byid=TRUE )
-plot(sichuan,col='grey',axes=T,
-     xlim=c(6.2e5,6.8e5),ylim=c(3.46e6,3.49e6))
-plot(lep, col = intcols, pch = 19,add=T,cex=0.5)
-plot(townships,add=T)
-plot(twn_centroids,pch=3,add=3)
-points(loc_lengthest,pch=3,col=colorRampPalette(c("red", "white"))( 10 ) ,cex=2)
-plot(townships_buffer,add=T)
+townships_buffer <- gBuffer(twn_centroids, width=500, byid=TRUE )
+
+# # plot buffers on top of map
+# plot(sichuan,col='grey',axes=T,
+#      xlim=c(6.2e5,6.8e5),ylim=c(3.46e6,3.49e6))
+# plot(lep, col = intcols, pch = 19,add=T,cex=0.5)
+# plot(townships,add=T)
+# plot(twn_centroids,pch=3,add=3)
+# points(loc_lengthest,pch=3,col=colorRampPalette(c("red", "white"))( 10 ) ,cex=2)
+# plot(townships_buffer,add=T)
 
 #' Now check intersection between lep data and buffers around township centers 
 
+# this takes the intersection
 lep_inBuffers <- lep[townships_buffer,]
 
 paste(nrow(lep_inBuffers),'/',nrow(lep))
@@ -526,6 +553,8 @@ plot(lep_inBuffers,add=T,pch=19)
 #' Or maybe township centroids computed here from township shapefile
 #' are not the ones used when cases are reported at centroid locations ? 
 #' 
-#' Don't really know what to conclude, ask Chris maybe?
+#' Conclusion on township vs point-level modeling : the conclusions shouldn't be very different, as most of the time there is one location per township. For now, township level analysis is enough, with covariates extracted at township level.
+#' 
+#' At the scale of graph shown previously, it is possible that points show patterns of regularity. I could test for that using the F function, not sure if that's useful here so I'll stop here.
 #' 
 #' 
