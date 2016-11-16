@@ -105,7 +105,7 @@ color.bar(pal,
 all_years = unique(lep$year_diag)
 all_weeks=1:54
 counts_yearWeek <- array(NA,
-                          dim=c(length(all_years),length(all_weeks)))
+                         dim=c(length(all_years),length(all_weeks)))
 # create new field in lep for week of the year diagnosed
 lep$week_diag <- as.numeric(format(x = as.Date(lep$date_diagn,
                                                format = '%m/%d/%Y'),
@@ -113,7 +113,7 @@ lep$week_diag <- as.numeric(format(x = as.Date(lep$date_diagn,
 for(iy in 1:length(all_years)){
   for(iw in 1:length(all_weeks)){
     counts_yearWeek[iy,iw] <- sum(lep$year_diag==all_years[iy] &
-                                     lep$week_diag==all_weeks[iw])
+                                    lep$week_diag==all_weeks[iw])
   }
 }
 
@@ -197,7 +197,7 @@ color.bar(pal,
 # 
 library(SDMTools)
 which_ina = which(pnt.in.poly(coordinates(lep),
-                  region_1a@polygons[[1]]@Polygons[[1]]@coords)$pip == 1)
+                              region_1a@polygons[[1]]@Polygons[[1]]@coords)$pip == 1)
 which_inb = which(pnt.in.poly(coordinates(lep),
                               region_1b@polygons[[1]]@Polygons[[1]]@coords)$pip == 1)
 
@@ -251,13 +251,13 @@ title('region 1b')
 all_years = unique(lep$year_diag)
 all_months=1:12
 counts_yearMonth_a <- array(NA,
-                          dim=c(length(all_years),length(all_months)))
+                            dim=c(length(all_years),length(all_months)))
 counts_yearMonth_b <- array(NA,
                             dim=c(length(all_years),length(all_months)))
 for(iy in 1:length(all_years)){
   for(im in 1:length(all_months)){
     counts_yearMonth_a[iy,im] <- sum(lep[which_ina,]$year_diag==all_years[iy] &
-                                     lep[which_ina,]$month_diag==all_months[im])
+                                       lep[which_ina,]$month_diag==all_months[im])
     counts_yearMonth_b[iy,im] <- sum(lep[which_inb,]$year_diag==all_years[iy] &
                                        lep[which_inb,]$month_diag==all_months[im])
   }
@@ -282,9 +282,9 @@ color.bar(pal,
 #' 
 
 counts_yearWeek_a <- array(NA,
-                         dim=c(length(all_years),length(all_weeks)))
+                           dim=c(length(all_years),length(all_weeks)))
 counts_yearWeek_b <- array(NA,
-                         dim=c(length(all_years),length(all_weeks)))
+                           dim=c(length(all_years),length(all_weeks)))
 # create new field in lep for week of the year diagnosed
 lep$week_diag <- as.numeric(format(x = as.Date(lep$date_diagn,
                                                format = '%m/%d/%Y'),
@@ -364,10 +364,10 @@ unique_loc <- unique(coordinates(lep))
 ts_loc <- list(length=nrow(unique_loc))
 
 for(i_loc in 1:nrow(unique_loc)){
-
+  
   # find indices of rows corresponding to location unique_loc[i_loc,]
   idx_loc <- which(apply(coordinates(lep), 1, function(x) all(x == unique_loc[i_loc,])))
-
+  
   # get corresponding diagnosis date
   ts_loc[[i_loc]] <- lep[['date_diagn']][idx_loc]
 }
@@ -429,7 +429,7 @@ plot(twn_centroids,add=T)
 #' 
 
 townships <- readShapePoly('../sichuan_database/from_gdb/Townships.shp',
-                         proj4string = prj)
+                           proj4string = prj)
 plot(townships,col='grey',axes=T)
 
 plot(sichuan,col='grey',axes=T)
@@ -558,3 +558,38 @@ plot(lep_inBuffers,add=T,pch=19)
 #' At the scale of graph shown previously, it is possible that points show patterns of regularity. I could test for that using the F function, not sure if that's useful here so I'll stop here.
 #' 
 #' 
+#' 
+#' #
+#' # Number of cases per township #
+#' 
+#' Howard said that our data is very sparse, with many township coming with no data points. Here I investigate the number of cases found in each township.
+#' 
+
+# Histogram of number of cases found per township
+
+# define projection for lepto data
+proj4string(lep) <- proj4string(townships)
+
+library(GISTools)
+# this vector contains the number of points in each township
+ptsPerTwnshp <- poly.counts(lep,townships)
+
+# count how many township contain n incidence points
+tab_ptsPerTwnshp <- table(ptsPerTwnshp)
+
+# this is the percentage of township with no data at all.
+tab_ptsPerTwnshp[1]/nrow(townships) * 100
+
+# plot with cut y-axis
+# install.packages('plotrix', dependencies = TRUE)
+library(plotrix)
+ylocs = c(seq(from=0,to=400,by=100),3850,3950)
+gap.barplot(y=tab_ptsPerTwnshp,
+            ytics = ylocs,yaxlab = ylocs,
+            xaxlab = names(tab_ptsPerTwnshp),
+            gap=c(401,3800),
+            xlab = 'number of incidence points in township',
+            ylab = 'number of townships')
+
+#' Most townships come with no incidence point...
+#' Confirmation of very sparse dataset.
