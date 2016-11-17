@@ -11,3 +11,15 @@ color.bar <- function(lut, min, max, nticks=11, ticks=seq(min, max, len=nticks),
     rect(0,y,10,y+1/scale, col=lut[i], border=NA)
   }	
 }
+
+
+# function to plot spatial object with specified breaks
+# from Cari's class
+ploteqc <- function(spobj, z, breaks, ...){
+  pal <- tim.colors(length(breaks)-1)
+  fb <- classIntervals(z, n = length(pal), 
+                       style = "fixed", fixedBreaks = breaks)
+  col <- findColours(fb, pal)
+  plot(spobj, col = col, ...)
+  image.plot(legend.only = TRUE, zlim = range(breaks), col = pal)
+}

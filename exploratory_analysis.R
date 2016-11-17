@@ -1,7 +1,7 @@
 #' ---
 #' title: "Exploratory analysis of Sichuan lepto data"
 #' author: "Karina Cucchi"
-#' date: "November 10th, 2016"
+#' date: "November 16th, 2016"
 #' ---
 
 source('utils_colorbar.R')
@@ -435,7 +435,7 @@ plot(townships,col='grey',axes=T)
 plot(sichuan,col='grey',axes=T)
 # get centroids of townships
 twn_centroids <- coordinates(townships)
-# tramsform numeric to dataframe
+# transform numeric to dataframe
 twn_centroids <- data.frame(twn_centroids)
 names(twn_centroids) <- c('long','lat')
 # transform to SpatialPointsDataFrame
