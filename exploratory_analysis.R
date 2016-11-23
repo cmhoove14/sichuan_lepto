@@ -1,7 +1,7 @@
 #' ---
 #' title: "Exploratory analysis of Sichuan lepto data"
 #' author: "Karina Cucchi"
-#' date: "November 16th, 2016"
+#' date: "November 23rd, 2016"
 #' ---
 
 source('utils_colorbar.R')
@@ -467,11 +467,14 @@ pal <- rev(heat.colors(max(unique_loc$lengthsPerLoc)))
 intcols_lengthPerLoc <- pal[unique_loc$lengthsPerLoc]
 
 layout(matrix(c(1,2),nrow=1), widths=c(4,1))
+par(mar=c(2,2,1,1))
 plot(sichuan,col='grey',axes=T,
-     xlim=c(6.2e5,6.8e5),ylim=c(3.45e6,3.5e6))
+     xlim=c(6.2e5,6.7e5),ylim=c(3.45e6,3.5e6))
 plot(townships,add=T)
-plot(unique_loc, col = intcols_lengthPerLoc, pch = 19,add=T,cex=0.5)
+plot(unique_loc,pch = 21,add=T,
+     bg = intcols_lengthPerLoc,col='black')
 plot(twn_centroids,pch=3,add=T)
+par(mar=c(2,2,2,3))
 color.bar(pal,
           min=min(unique_loc$lengthsPerLoc),
           max=max(unique_loc$lengthsPerLoc),
