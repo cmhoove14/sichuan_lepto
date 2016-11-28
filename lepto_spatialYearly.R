@@ -1,7 +1,7 @@
 #' ---
 #' title: "Bayesian analysis of yearly lepto incidence data"
 #' author: "Karina Cucchi, Christopher Hoover"
-#' date: "November 16th, 2016"
+#' date: "November 23rd, 2016"
 #' ---
 #' 
 
@@ -28,15 +28,11 @@ wrong_rows <- which(coordinates(lep) < 0,arr.ind = T)[,1]
 lep <- lep[-wrong_rows,] ; rm(wrong_rows)
 plot(lep)
 
-#' ## Townships polygons with population ## 
-
-# get population data from Chris' incidence shapefiles
-
 #'
 #' ## Population data ## 
 #' 
 
-# get population data from Chris' incidence shapefiles
+#' get population data from Chris' incidence shapefiles
 
 # townships projections are WGS_1984_UTM_Zone_48N
 # incidence projections are WGS_1984_UTM_Zone_47N
@@ -90,40 +86,43 @@ print(e_total)
 # expected incidence rate per township
 townships$e_i = townships$total * e_total
 # number of incidence points per township
-library(GISTools)
+library(GISTools) # for poly.counts function
 townships$y_i = poly.counts(lep,townships)
 sum(townships$y_i)
 nrow(lep)
 #' Some datapoints are not overlayed by a polygon... a few townships are missing
 
-# corresponding relative risk
-townships$theta_i = townships$y_i / townships$e_i
+# corresponding SMR (Standard Morbidity Ratio)
+# ratio of observed to expected
+townships$smr_i = townships$y_i / townships$e_i
 
 # plot map
-par(oma=c( 0,0,0,3)) # margin of 4 spaces width at right hand side
+par(oma=c( 0,0,0,4)) # margin of 4 spaces width at right hand side
 ploteqc(spobj = townships,border=NA,
-        z = townships$theta_i,
-        breaks = pretty(townships$theta_i,30),
-        xlim=c(2e5,8e5),ylim=c(3e6,3.6e6),
-        axes=T)
-title(expression('map of relative risks '*theta['i']))
+        z = townships$smr_i,
+        breaks = pretty(townships$smr_i,30),
+        xlim=c(2e5,8e5),ylim=c(3e6,3.6e6))
+title(expression('map of SMR'))
+# Add scalebar
+myScalebar(units_label = 100000,text_label = "100 km",xleft=6e5)
 
 # take log-transform
-townships$eta_i <- log(townships$theta_i)
-townships$eta_i[is.infinite(townships$eta_i)] <- NA
+townships$log_smr_i <- log(townships$smr_i)
+townships$log_smr_i[is.infinite(townships$log_smr_i)] <- NA
 
-hist(townships$eta_i,probability = T,main='',
-     xlab=expression(eta['i']),ylab=expression('p('*eta['i']*')'))
+hist(townships$log_smr_i,probability = T,main='',
+     xlab='log(SMR)',ylab=expression('p(log(SMR))'))
 
 # plot map
 par(oma=c(0,0,0,3)) # margin of 4 spaces width at right hand side
 plot(townships,border='grey',
      xlim=c(2e5,8e5),ylim=c(3e6,3.6e6))
 ploteqc(spobj = townships,border=NA,
-        z = townships$eta_i,
-        breaks = pretty(townships$eta_i,30),
+        z = townships$log_smr_i,
+        breaks = pretty(townships$log_smr_i,30),
         add=T)
-title(expression('map of log-transformed relative risks '*eta['i']))
+title(expression('map of log-transformed SMR'))
+myScalebar(units_label = 100000,text_label = "100 km",xleft=6e5)
 
 #'
 #' ## Now focus at one year only, year 2005. ##
@@ -147,36 +146,38 @@ library(GISTools)
 townships$y_i.2005 = poly.counts(lep.2005,townships)
 
 # corresponding relative risk
-townships$theta_i.2005 = townships$y_i.2005 / townships$e_i.2005
+# relative risk in si is count yi divided by expected
+townships$smr_i.2005 = townships$y_i.2005 / townships$e_i.2005
 
-hist(townships$theta_i.2005,probability = T,main='year 2005',
-     xlab=expression(theta['i']),ylab=expression('p('*theta['i']*')'))
+hist(townships$smr_i.2005,probability = T,main='year 2005',
+     xlab='SMR',ylab=expression('p(SMR)'))
 
 # plot map
 par(oma=c( 0,0,0,3)) # margin of 4 spaces width at right hand side
 ploteqc(spobj = townships,border=NA,
-        z = townships$theta_i.2005,
-        breaks = pretty(townships$theta_i.2005,30),
-        xlim=c(2e5,8e5),ylim=c(3e6,3.6e6),
-        axes=T)
-title(expression('map of relative risks '*theta['i']*', 2005'))
+        z = townships$smr_i.2005,
+        breaks = pretty(townships$smr_i.2005,30),
+        xlim=c(2e5,8e5),ylim=c(3e6,3.6e6))
+title(expression('map of SMR, 2005'))
+myScalebar(units_label = 100000,text_label = "100 km",xleft=6e5)
 
 # take log-transform
-townships$eta_i.2005 <- log(townships$theta_i.2005)
-townships$eta_i.2005[is.infinite(townships$eta_i.2005)] <- NA
+townships$log_smr_i.2005 <- log(townships$smr_i.2005)
+townships$log_smr_i.2005[is.infinite(townships$log_smr_i.2005)] <- NA
 
-hist(townships$eta_i.2005,probability = T,main='year 2005',
-     xlab=expression(eta['i']),ylab=expression('p('*eta['i']*')'))
+hist(townships$log_smr_i.2005,probability = T,main='year 2005',
+     xlab='log(SMR)',ylab=expression('p(log(SMR))'))
 
 # plot map
 par(oma=c(0,0,0,3)) # margin of 4 spaces width at right hand side
 plot(townships,border='grey',
      xlim=c(2e5,8e5),ylim=c(3e6,3.6e6))
 ploteqc(spobj = townships,border=NA,
-        z = townships$eta_i.2005,
-        breaks = pretty(townships$eta_i.2005,30),
+        z = townships$log_smr_i.2005,
+        breaks = pretty(townships$log_smr_i.2005,30),
         add=T)
-title(expression('log-transformed relative risks '*eta['i']*', 2005'))
+title(expression('log-transformed SMR, 2005'))
+myScalebar(units_label = 100000,text_label = "100 km",xleft=6e5)
 
 #'
 #' ## Calculate neighboring relationships between townships ##
@@ -191,11 +192,12 @@ layout(matrix(c(1,2),nrow=1))
 plot(townships, border = "gray")
 coords=coordinates(townships) # centroids of township polygons
 plot(nb.bound, coords, pch = 19, cex = 0.4, add = TRUE)
+myScalebar(units_label = 100000,text_label = "100 km",xleft=6e5)
 
 plot(townships, border = "gray",
      xlim=c(6.2e5,6.8e5),ylim=c(3.46e6,3.49e6))
 plot(nb.bound, coords, pch = 19, cex = 0.4, add = TRUE)
-
+myScalebar(units_label = 10000,text_label = "10 km",xleft=6.7e5)
 
 #'
 #' ## Run CARBayes ##
@@ -210,31 +212,57 @@ library(CARBayes)
 weight <- listw2mat(nb2listw(nb.bound, style = "B"))
 Wmat<- as(weight, "CsparseMatrix")
 
-# define variables for formula
-y = townships$y_i.2005
-pop = townships$total
-
-#'
-#' ### First run without autocorrelation ###
-#'
-
-formulaR = y ~ 1+offset(log(townships$total)) #intercept only
 # build model
-modelR=S.CARbym(formula = formulaR,
-                family="poisson",
-                W=as.matrix(Wmat),
-                burnin=30000,
-                n.sample=40000,
-                thin=1,
-                verbose=TRUE)
 
-REsum=modelR$samples$re
+file_save = "RData/lepto_spatialYearly.RData"
+if(file.exists(file_save)) load(file_save)
+if(!exists("modelR")){
+  modelR=S.CARbym(formula = y_i.2005 ~ 1+offset(log(total)),
+                  data = townships,
+                  family = "poisson",
+                  W = as.matrix(Wmat),
+                  burnin = 30000,
+                  n.sample = 40000,
+                  thin = 1,
+                  verbose = TRUE)
+  save(list = "modelR",file = file_save)
+}
 
-REsummean=colMeans(REsum)
+summary(modelR)
+print(modelR)
 
 
 #'
-#' ### Now run with autocorrelation ###
+#' Investigate intensities of spatial autocorrelation and of random effects
 #'
+#'spatial autocorrelation :
+# tau2 here corresponds to r in Onicescu & Lawson 2016
+# sigma2 is random effects in both cases
 
-bymCAR.re
+layout(matrix(c(1,2),nrow=1))
+plot(density(sqrt(modelR$samples$tau2)),
+     xlab='r',
+     ylab='p(r)',
+     main='posterior for r')
+plot(density(sqrt(modelR$samples$sigma2)),
+     xlab=expression(sigma),
+     ylab=expression('p('*sigma*')'),
+     main=expression('posterior for '*sigma))
+
+# plot resulting fitted values for mean risk (?)
+
+layout(1)
+par(oma=c(0,0,0,3)) # margin of 4 spaces width at right hand side
+plot(townships,border='grey',
+     xlim=c(2e5,8e5),ylim=c(3e6,3.6e6))
+ploteqc(spobj = townships,border=NA,
+        z = fitted.values(modelR),
+        breaks = pretty(fitted.values(modelR),30),
+        add=T)
+title(expression('fitted risk values'))
+myScalebar(units_label = 100000,text_label = "100 km",xleft=6e5)
+
+#' I don't think we can say anything on the basis of that map.
+#' Try focus on a subregion in that map.
+#' For example region 1.
+

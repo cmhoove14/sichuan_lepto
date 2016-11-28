@@ -23,3 +23,24 @@ ploteqc <- function(spobj, z, breaks, ...){
   plot(spobj, col = col, ...)
   image.plot(legend.only = TRUE, zlim = range(breaks), col = pal)
 }
+
+# function to add a scalebar to a base-graphics plot
+# adapted from
+# http://stackoverflow.com/questions/23784943/how-to-add-a-scale-bar-in-r
+myScalebar = function(units_label,text_label, xleft=NULL, yadj=1.5) {
+  
+  # Get plot coordinates
+  pc = par("usr") 
+  
+  # Position scale line between last two major x-axis tick marks
+  # and 1/10th of the total y-range above the lower y-axis coordinate
+  if(is.null(xleft)) xleft <- floor(pc[2]-units_label)
+  lines(c(xleft,xleft+units_label),     
+        rep(pc[3] + 0.1*(pc[4] - pc[3]), 2),lwd=2)
+  
+  # Place the units label at the midpoint of and just below the scale line
+  text(x=mean(c(xleft,xleft+units_label)), 
+       y=pc[3] + 0.1*(pc[4] - pc[3]),
+       label=text_label, adj=c(0.5, yadj),
+       font=2) # for bold
+}
