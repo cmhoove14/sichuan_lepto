@@ -11,7 +11,7 @@ library(maptools) # for importing shapefiles
 library(rgdal) # for coordinates things
 library(classInt) # for classIntervals ploteqc
 
-source('utils_colorbar.R')
+source('utils.R')
 
 #'
 #' # Load data #
@@ -92,92 +92,121 @@ sum(townships$y_i)
 nrow(lep)
 #' Some datapoints are not overlayed by a polygon... a few townships are missing
 
-# corresponding SMR (Standard Morbidity Ratio)
+# corresponding SIR (Standard Morbidity Ratio)
 # ratio of observed to expected
-townships$smr_i = townships$y_i / townships$e_i
+townships$sir_i = townships$y_i / townships$e_i
 
 # plot map
 par(oma=c( 0,0,0,4)) # margin of 4 spaces width at right hand side
 ploteqc(spobj = townships,border=NA,
-        z = townships$smr_i,
-        breaks = pretty(townships$smr_i,30),
+        z = townships$sir_i,
+        breaks = pretty(townships$sir_i,30),
         xlim=c(2e5,8e5),ylim=c(3e6,3.6e6))
-title(expression('map of SMR'))
+title(expression('map of SIR'))
 # Add scalebar
 myScalebar(units_label = 100000,text_label = "100 km",xleft=6e5)
 
 # take log-transform
-townships$log_smr_i <- log(townships$smr_i)
-townships$log_smr_i[is.infinite(townships$log_smr_i)] <- NA
+townships$log_sir_i <- log(townships$sir_i)
+townships$log_sir_i[is.infinite(townships$log_sir_i)] <- NA
 
-hist(townships$log_smr_i,probability = T,main='',
-     xlab='log(SMR)',ylab=expression('p(log(SMR))'))
+hist(townships$log_sir_i,probability = T,main='',
+     xlab='log(SIR)',ylab=expression('p(log(SIR))'))
 
 # plot map
 par(oma=c(0,0,0,3)) # margin of 4 spaces width at right hand side
 plot(townships,border='grey',
      xlim=c(2e5,8e5),ylim=c(3e6,3.6e6))
 ploteqc(spobj = townships,border=NA,
-        z = townships$log_smr_i,
-        breaks = pretty(townships$log_smr_i,30),
+        z = townships$log_sir_i,
+        breaks = pretty(townships$log_sir_i,30),
         add=T)
-title(expression('map of log-transformed SMR'))
+title(expression('map of log-transformed SIR'))
 myScalebar(units_label = 100000,text_label = "100 km",xleft=6e5)
 
 #'
 #' ## Now focus at one year only, year 2005. ##
 #' 
 
+#' First calculate yearly SIR year by year
+
 lep_dates <- as.Date(as.character(lep$date_diagn),format = '%Y/%m/%d')
 lep$year_diag <- as.numeric(format(lep_dates,'%Y')); rm(lep_dates)
-lep.2005 <- lep[which(lep$year_diag==2005),]
+allYears <- unique(unique(lep$year_diag))
 
-#' Reproduce the analysis above
+sir_byyear <- matrix(NA,nrow = nrow(townships),ncol=length(allYears))
+colnames(sir_byyear) <- allYears
+
+for(iy in 1:length(allYears)){
+  
+  # this is the subset of lep for year allYears[iy]
+  lep.iy <- lep[which(lep$year_diag==allYears[iy]),]
+  
+  # expected incidence rate per township
+  # take expected in 11 years and
+  # divide by 11 (=length(allYears)) to get per year 
+  e_i_in1year <- townships$e_i / 11
+  # number of incidence points per township
+  y_i_inyeariy = poly.counts(lep.iy,townships)
+  
+  sir_byyear[,iy] <- y_i_inyeariy / e_i_in1year
+  
+}
+rm(e_i_in1year,y_i_inyeariy,iy)
+townships$yearly_sir_i <- sir_byyear; rm(sir_byyear)
+
+#' old way for year 2005
+
+lep.2005 <- lep[which(lep$year_diag==2005),]
 
 # total incidence rate
 e_total.2005 = nrow(lep.2005)/sum(townships$total)
 print(e_total.2005)
-#' The total expected rate for the entire dataset is 11 out of one million indoviduals per 11 years.
 
 # expected incidence rate per township
 townships$e_i.2005 = townships$total * e_total.2005
 # number of incidence points per township
-library(GISTools)
 townships$y_i.2005 = poly.counts(lep.2005,townships)
 
-# corresponding relative risk
-# relative risk in si is count yi divided by expected
-townships$smr_i.2005 = townships$y_i.2005 / townships$e_i.2005
+# corresponding standardized incidence ratio
+# SIR in unit si is count yi divided by expected
+townships$sir_i.2005 = townships$y_i.2005 / townships$e_i.2005
 
-hist(townships$smr_i.2005,probability = T,main='year 2005',
-     xlab='SMR',ylab=expression('p(SMR)'))
+hist(townships$sir_i.2005,probability = T,main='year 2005',
+     xlab='SIR',ylab=expression('p(SIR)'))
 
 # plot map
 par(oma=c( 0,0,0,3)) # margin of 4 spaces width at right hand side
 ploteqc(spobj = townships,border=NA,
-        z = townships$smr_i.2005,
-        breaks = pretty(townships$smr_i.2005,30),
+        z = townships$sir_i.2005,
+        breaks = pretty(townships$sir_i.2005,30),
         xlim=c(2e5,8e5),ylim=c(3e6,3.6e6))
-title(expression('map of SMR, 2005'))
+title(expression('map of SIR, 2005'))
 myScalebar(units_label = 100000,text_label = "100 km",xleft=6e5)
 
 # take log-transform
-townships$log_smr_i.2005 <- log(townships$smr_i.2005)
-townships$log_smr_i.2005[is.infinite(townships$log_smr_i.2005)] <- NA
+townships$log_sir_i.2005 <- log(townships$sir_i.2005)
+townships$log_sir_i.2005[is.infinite(townships$log_sir_i.2005)] <- NA
 
-hist(townships$log_smr_i.2005,probability = T,main='year 2005',
-     xlab='log(SMR)',ylab=expression('p(log(SMR))'))
+hist(townships$log_sir_i.2005,probability = T,main='year 2005',
+     xlab='log(SIR)',ylab=expression('p(log(SIR))'))
 
 # plot map
 par(oma=c(0,0,0,3)) # margin of 4 spaces width at right hand side
 plot(townships,border='grey',
      xlim=c(2e5,8e5),ylim=c(3e6,3.6e6))
 ploteqc(spobj = townships,border=NA,
-        z = townships$log_smr_i.2005,
-        breaks = pretty(townships$log_smr_i.2005,30),
+        z = townships$log_sir_i.2005,
+        breaks = pretty(townships$log_sir_i.2005,30),
         add=T)
-title(expression('log-transformed SMR, 2005'))
+title(expression('log-transformed SIR, 2005'))
 myScalebar(units_label = 100000,text_label = "100 km",xleft=6e5)
+
+#'
+#' Now save townships variable for other scripts
+#'
+
+save('townships',file = "RData/townships_sir.RData")
 
 #'
 #' ## Calculate neighboring relationships between townships ##
